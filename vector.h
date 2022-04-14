@@ -151,7 +151,7 @@ private:
   size_t capacity_{0};
 
   T* copy(T* data, size_t size, size_t capacity) {                  // O(N)
-    T* tmp_data = nullptr;
+    T* tmp_data;
     if (capacity > 0 && size <= capacity) {
       tmp_data = static_cast<T*>(operator new(capacity * sizeof(T)));
       size_t tmp_size = 0;
@@ -159,15 +159,15 @@ private:
         for (; tmp_size < size; tmp_size++) {
           new (tmp_data + tmp_size) T(data[tmp_size]);
         }
+        return tmp_data;
       } catch (...) {
-        while (tmp_size-- > 0) {
-          (tmp_data + tmp_size)->~T();
+        while (tmp_size > 0) {
+          (tmp_data + --tmp_size)->~T();
         }
         operator delete(tmp_data);
         throw;
       }
     }
-    return tmp_data;
   }
 
   void reset(T* tmp_data, size_t tmp_size, size_t new_capacity) {   // O(N)
