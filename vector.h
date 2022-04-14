@@ -9,7 +9,7 @@ struct vector {
   vector() = default;                                   // O(1) nothrow
 
   vector(vector const& other) {                         // O(N) strong
-    update(other.data_, other.size_, other.size_);
+    copy(other.data_, other.size_, other.size_);
   }
 
   vector& operator=(vector const& other) {              // O(N) strong
@@ -63,9 +63,27 @@ struct vector {
   void push_back(T const& x) {                          // O(1)* strong
     if (size_ == capacity_) {
       size_t new_capacity = std::max<size_t>(1, 2 * capacity_);
-      T* new_data = copy(data_, size_, new_capacity);
-      new (new_data + size_) T(x);
-      reset(new_data, size_, new_capacity);
+      T* new_data = static_cast<T*>(operator new(new_capacity * sizeof(T)));
+      size_t tmp_size = 0;
+      try {
+        for (; tmp_size < size_; tmp_size++) {
+          new (new_data + tmp_size) T(data_[tmp_size]);
+          data_[tmp_size].~T();
+        }
+        new (new_data + size_) T(x);
+        for (size_t i = 0; i < size_; i++) {
+          data_[i].~T();
+        }
+        operator delete(data_);
+        data_ = new_data;
+        capacity_ = new_capacity;
+      } catch (...) {
+        for (size_t i = 0; i < tmp_size; i++) {
+          (new_data + i)->~T();
+        }
+        operator delete(new_data);
+        throw;
+      }
     } else {
       new (data_ + size_) T(x);
     }
@@ -150,19 +168,25 @@ private:
   size_t size_{0};
   size_t capacity_{0};
 
-  T* copy(T* data, size_t size, size_t capacity) {                  // O(N)
-    T* tmp_data;
-    if (capacity > 0 && size <= capacity) {
-      tmp_data = static_cast<T*>(operator new(capacity * sizeof(T)));
+  void copy(T* data, size_t size, size_t capacity) {                  // O(N)
+    if (size <= capacity) {
+      T* tmp_data = nullptr;
+      if (capacity > 0) {
+        tmp_data = static_cast<T*>(operator new(capacity * sizeof(T)));
+      }
       size_t tmp_size = 0;
       try {
         for (; tmp_size < size; tmp_size++) {
           new (tmp_data + tmp_size) T(data[tmp_size]);
         }
-        return tmp_data;
+        clear();
+        operator delete(data_);
+        size_ = size;
+        capacity_ = capacity;
+        data_ = tmp_data;
       } catch (...) {
-        while (tmp_size > 0) {
-          (tmp_data + --tmp_size)->~T();
+        for (size_t i = 0; i < tmp_size; i++) {
+          (tmp_data + i)->~T();
         }
         operator delete(tmp_data);
         throw;
@@ -170,23 +194,9 @@ private:
     }
   }
 
-  void reset(T* tmp_data, size_t tmp_size, size_t new_capacity) {   // O(N)
-    for (size_t i = 0; i < size_; i++) {
-      data_[i].~T();
-    }
-    operator delete(data_);
-    size_ = tmp_size;
-    capacity_ = new_capacity;
-    data_ = tmp_data;
-  }
-
-  void update(T* data, size_t size, size_t capacity) {              // O(N)
-    reset(copy(data, size, capacity), size, capacity);
-  }
-
   void set_capacity(size_t new_capacity) {                          // O(N)
     if (new_capacity != capacity_) {
-      update(data_, size_, new_capacity);
+      copy(data_, size_, new_capacity);
     }
   }
 };
