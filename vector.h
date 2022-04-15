@@ -9,7 +9,7 @@ struct vector {
   vector() = default;                                   // O(1) nothrow
 
   vector(vector const& other) {                         // O(N) strong
-    reset(other.data_, other.size_, other.size_);
+    update(other.data_, other.size_, other.size_);
   }
 
   vector& operator=(vector const& other) {              // O(N) strong
