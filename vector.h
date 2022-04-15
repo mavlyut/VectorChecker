@@ -9,7 +9,7 @@ struct vector {
   vector() = default;                                   // O(1) nothrow
 
   vector(vector const& other) {                         // O(N) strong
-    update(other.data_, other.size_, other.size_);
+    reset(other.data_, other.size_, other.size_);
   }
 
   vector& operator=(vector const& other) {              // O(N) strong
@@ -178,7 +178,7 @@ private:
     return tmp_data;
   }
 
-  void reset(T* tmp_data, size_t tmp_size, size_t new_capacity) {   // O(N)
+  void reset(T* tmp_data, size_t tmp_size, size_t new_capacity) {   // O(N) nothrow
     for (size_t i = 0; i < size_; i++) {
       data_[i].~T();
     }
