@@ -70,6 +70,7 @@ struct vector {
         reset(new_data, size_, new_capacity);
       } catch (...) {
         operator delete(new_data);
+	throw;
       }
     } else {
       new (data_ + size_) T(x);
