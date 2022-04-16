@@ -1,6 +1,6 @@
 #pragma once
 #include <cstddef>
-#include <iostream>
+#include <cstdlib>
 
 template <typename T>
 struct vector {
