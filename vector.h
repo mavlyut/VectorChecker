@@ -1,5 +1,6 @@
 #pragma once
 #include <cstddef>
+#include <iostream>
 
 template <typename T>
 struct vector {
@@ -63,18 +64,17 @@ struct vector {
   void push_back(T const& x) {                          // O(1)* strong
     if (size_ == capacity_) {
       size_t new_capacity = std::max<size_t>(1, 2 * capacity_);
-      T* new_data;
+      T* new_data = copy(data_, size_, new_capacity);
       try {
-        new_data = copy(data_, size_, new_capacity);
         new (new_data + size_) T(x);
-        reset(new_data, size_ + 1, new_capacity);
       } catch (...) {
-        for (size_t i = 0; i < size_ + 1; i++) {
+        for (size_t i = 0; i < size_; i++) {
           (new_data + i)->~T();
         }
         operator delete(new_data);
         throw;
       }
+      reset(new_data, ++size_, new_capacity);
     } else {
       new (data_ + size_++) T(x);
     }
