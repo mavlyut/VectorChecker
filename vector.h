@@ -66,7 +66,7 @@ struct vector {
       size_t new_capacity = std::max<size_t>(1, 2 * capacity_);
       T* new_data = copy(data_, size_, new_capacity);
       try {
-        new (new_data + size_) T(x);
+        new (new_data + size_++) T(x);
       } catch (...) {
         for (size_t i = 0; i < size_; i++) {
           (new_data + i)->~T();
