@@ -165,11 +165,12 @@ private:
       size_t tmp_size = 0;
       try {
         while (tmp_size < size) {
-          new (tmp_data + tmp_size++) T(data[tmp_size]);
+          new (tmp_data + tmp_size) T(data[tmp_size]);
+          tmp_size++;
         }
       } catch (...) {
-        while (tmp_size > 0) {
-          (tmp_data + --tmp_size)->~T();
+        while (--tmp_size > 0) {
+          (tmp_data + tmp_size)->~T();
         }
         operator delete(tmp_data);
         throw;
