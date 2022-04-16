@@ -64,9 +64,11 @@ struct vector {
   void push_back(T const& x) {                          // O(1)* strong
     if (size_ == capacity_) {
       size_t new_capacity = std::max<size_t>(1, 2 * capacity_);
-      T* new_data = copy(data_, size_, new_capacity);
+      T* new_data;
       try {
+        new_data = copy(data_, size_, new_capacity);
         new (new_data + size_) T(x);
+        reset(new_data, ++size_, new_capacity);
       } catch (...) {
         for (size_t i = 0; i < size_; i++) {
           (new_data + i)->~T();
@@ -74,7 +76,6 @@ struct vector {
         operator delete(new_data);
         throw;
       }
-      reset(new_data, ++size_, new_capacity);
     } else {
       new (data_ + size_++) T(x);
     }
@@ -163,16 +164,8 @@ private:
     if (capacity > 0 && size <= capacity) {
       tmp_data = static_cast<T*>(operator new(capacity * sizeof(T)));
       size_t tmp_size = 0;
-      try {
-        for (; tmp_size < size; tmp_size++) {
-          new (tmp_data + tmp_size) T(data[tmp_size]);
-        }
-      } catch (...) {
-        while (tmp_size > 0) {
-          (tmp_data + --tmp_size)->~T();
-        }
-        operator delete(tmp_data);
-        throw;
+      for (; tmp_size < size; tmp_size++) {
+        new (tmp_data + tmp_size) T(data[tmp_size]);
       }
     }
     return tmp_data;
