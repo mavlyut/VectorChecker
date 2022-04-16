@@ -1,5 +1,8 @@
 git add -A
-git commit -m "_"
+cnt=`cat num.txt`
+git commit -m $cnt
 git push
 rm vector.h
 echo > vector.h
+let cnt+=1
+echo $cnt > "num.txt"
