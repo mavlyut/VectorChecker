@@ -9,6 +9,12 @@ struct vector {
 
   vector() = default;                                   // O(1) nothrow
 
+  vector(size_t capacity) {
+    data_ = static_cast<T*>(operator new(capacity * sizeof(T)));
+    size_ = 0;
+    capacity_ = capacity;
+  }
+
   vector(vector const& other) {                         // O(N) strong
     update(other.data_, other.size_, other.size_);
   }
@@ -63,18 +69,17 @@ struct vector {
 
   void push_back(T const& x) {                          // O(1)* strong
     if (size_ == capacity_) {
-      size_t new_capacity = std::max<size_t>(1, 2 * capacity_);
-      T* new_data = copy(data_, size_, new_capacity);
+      vector<T> buf(std::max<size_t>(1, 2 * capacity_));
+      size_t tmp_size = 0;
       try {
-        new (new_data + size_++) T(x);
-      } catch (...) {
-        for (size_t i = 0; i < size_; i++) {
-          (new_data + i)->~T();
+        for (; tmp_size < size_; tmp_size++) {
+          buf.push_back(data_[tmp_size]);
         }
-        operator delete(new_data);
-        throw;
+        buf.push_back(x);
+        swap(buf);
+      } catch (...) {
+
       }
-      reset(new_data, size_, new_capacity);
     } else {
       new (data_ + size_++) T(x);
     }
