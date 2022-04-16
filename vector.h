@@ -161,8 +161,8 @@ private:
           tmp_size++;
         }
       } catch (...) {
-        while (--tmp_size >= 0) {
-          (tmp_data + tmp_size)->~T();
+        for (size_t i = 0; i < tmp_size; i++) {
+          (tmp_data + i)->~T();
         }
         operator delete(tmp_data);
         throw;
