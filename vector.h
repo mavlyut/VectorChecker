@@ -69,7 +69,7 @@ struct vector {
       try {
         reset(new_data, size_ + 1, new_capacity);
       } catch (...) {
-        for (size_t i = 0; i < size_ + 1; i++) {
+        for (size_t i = 0; i < size_; i++) {
           (new_data + i)->~T();
         }
         operator delete(new_data);
