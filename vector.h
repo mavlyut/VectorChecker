@@ -74,7 +74,7 @@ struct vector {
         operator delete(new_data);
         throw;
       }
-      reset(new_data, size_ + 1, new_capacity);
+      reset(new_data, size_, new_capacity);
     } else {
       new (data_ + size_++) T(x);
     }
