@@ -66,7 +66,7 @@ struct vector {
       size_t new_capacity = std::max<size_t>(1, 2 * capacity_);
       T* new_data = copy(data_, size_, new_capacity);
       new (new_data + size_) T(x);
-      reset(new_data, ++size_, new_capacity);
+      reset(new_data, size_ + 1, new_capacity);
     } else {
       new (data_ + size_++) T(x);
     }
