@@ -65,8 +65,16 @@ struct vector {
     if (size_ == capacity_) {
       size_t new_capacity = std::max<size_t>(1, 2 * capacity_);
       T* new_data = copy(data_, size_, new_capacity);
-      new (new_data + size_) T(x);
-      reset(new_data, size_ + 1, new_capacity);
+      try {
+        new (new_data + size_) T(x);
+        reset(new_data, size_ + 1, new_capacity);
+      } catch (...) {
+        for (size_t i = 0; i < size_ + 1; i++) {
+          (new_data + i)->~T();
+        }
+        operator delete(new_data);
+        throw;
+      }
     } else {
       new (data_ + size_++) T(x);
     }
@@ -150,7 +158,7 @@ private:
   size_t size_{0};
   size_t capacity_{0};
 
-  T* copy(T* data, size_t size, size_t capacity) {                  // O(N) strong
+  T* copy(T* data, size_t size, size_t capacity) {                  // O(N)
     T* tmp_data = nullptr;
     if (capacity > 0 && size <= capacity) {
       tmp_data = static_cast<T*>(operator new(capacity * sizeof(T)));
@@ -160,8 +168,8 @@ private:
           new (tmp_data + tmp_size++) T(data[tmp_size]);
         }
       } catch (...) {
-        for (size_t i = 0; i < tmp_size; i++) {
-          (tmp_data + i)->~T();
+        while (tmp_size > 0) {
+          (tmp_data + --tmp_size)->~T();
         }
         operator delete(tmp_data);
         throw;
