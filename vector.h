@@ -78,7 +78,8 @@ struct vector {
         buf.push_back(x);
         swap(buf);
       } catch (...) {
-
+        buf.~vector<T>();
+        throw;
       }
     } else {
       new (data_ + size_++) T(x);
