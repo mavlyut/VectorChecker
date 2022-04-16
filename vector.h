@@ -65,9 +65,8 @@ struct vector {
     if (size_ == capacity_) {
       size_t new_capacity = std::max<size_t>(1, 2 * capacity_);
       T* new_data = copy(data_, size_, new_capacity);
-      new (new_data + size_) T(x);
       try {
-        reset(new_data, size_ + 1, new_capacity);
+        new (new_data + size_) T(x);
       } catch (...) {
         for (size_t i = 0; i < size_; i++) {
           (new_data + i)->~T();
@@ -75,6 +74,7 @@ struct vector {
         operator delete(new_data);
         throw;
       }
+      reset(new_data, size_ + 1, new_capacity);
     } else {
       new (data_ + size_++) T(x);
     }
