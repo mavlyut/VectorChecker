@@ -73,7 +73,8 @@ struct vector {
       }
       reset(new_data, size_ + 1, new_capacity);
     } else {
-      new (data_ + size_++) T(x);
+      new (data_ + size_) T(x);
+      size_++;
     }
   }
 
