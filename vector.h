@@ -173,7 +173,7 @@ private:
     return tmp_data;
   }
 
-  void delete_array(T* data, size_t tmp_size) {
+  void delete_array(T* data, size_t tmp_size) {                     // O(N) nothrow
     for (size_t i = 0; i < tmp_size; i++) {
       (data + i)->~T();
     }
