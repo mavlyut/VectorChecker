@@ -1,6 +1,6 @@
 #pragma once
 #include <cstddef>
-#include <cstdlib>
+#include <iostream>
 
 template <typename T>
 struct vector {
@@ -171,7 +171,7 @@ private:
     }
     return tmp_data;
   }
-  
+
   void delete_array(T* data, size_t tmp_size) {
     for (size_t i = 0; i < tmp_size; i++) {
       (data + i)->~T();
