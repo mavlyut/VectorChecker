@@ -68,10 +68,7 @@ struct vector {
       try {
         new (new_data + size_) T(x);
       } catch (...) {
-        for (size_t i = 0; i < size_; i++) {
-          (new_data + i)->~T();
-        }
-        operator delete(new_data);
+        delete_array(new_data, size_);
         throw;
       }
       reset(new_data, size_ + 1, new_capacity);
@@ -164,36 +161,36 @@ private:
       tmp_data = static_cast<T*>(operator new(capacity * sizeof(T)));
       size_t tmp_size = 0;
       try {
-        while (tmp_size < size) {
+        for (; tmp_size < size; tmp_size++) {
           new (tmp_data + tmp_size) T(data[tmp_size]);
-          tmp_size++;
         }
       } catch (...) {
-        for (size_t i = 0; i < tmp_size; i++) {
-          (tmp_data + i)->~T();
-        }
-        operator delete(tmp_data);
+        delete_array(tmp_data, tmp_size);
         throw;
       }
     }
     return tmp_data;
   }
+  
+  void delete_array(T* data, size_t tmp_size) {
+    for (size_t i = 0; i < tmp_size; i++) {
+      (data + i)->~T();
+    }
+    operator delete(data);
+  }
 
   void reset(T* tmp_data, size_t tmp_size, size_t new_capacity) {   // O(N) nothrow
-    for (size_t i = 0; i < size_; i++) {
-      data_[i].~T();
-    }
-    operator delete(data_);
+    delete_array(data_, size_);
     size_ = tmp_size;
     capacity_ = new_capacity;
     data_ = tmp_data;
   }
 
-  void update(T* data, size_t size, size_t capacity) {              // O(N)
+  void update(T* data, size_t size, size_t capacity) {              // O(N) strong
     reset(copy(data, size, capacity), size, capacity);
   }
 
-  void set_capacity(size_t new_capacity) {                          // O(N)
+  void set_capacity(size_t new_capacity) {                          // O(N) strong
     if (new_capacity != capacity_) {
       update(data_, size_, new_capacity);
     }
