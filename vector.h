@@ -1,5 +1,6 @@
 #pragma once
 #include <cstddef>
+#include <iostream>
 
 template <typename T>
 struct vector {
@@ -64,12 +65,17 @@ struct vector {
     if (size_ == capacity_) {
       size_t new_capacity = std::max<size_t>(1, 2 * capacity_);
       T* new_data = copy(data_, size_, new_capacity);
-      new (new_data + size_) T(x);
-      reset(new_data, size_, new_capacity);
+      try {
+        new (new_data + size_) T(x);
+      } catch (...) {
+        delete_array(new_data, size_);
+        throw;
+      }
+      reset(new_data, size_ + 1, new_capacity);
     } else {
       new (data_ + size_) T(x);
+      size_++;
     }
-    size_++;
   }
 
   void pop_back() {                                     // O(1) nothrow
@@ -150,7 +156,7 @@ private:
   size_t size_{0};
   size_t capacity_{0};
 
-  T* copy(T* data, size_t size, size_t capacity) {                  // O(N)
+  T* copy(T* data, size_t size, size_t capacity) {                  // O(N) strong
     T* tmp_data = nullptr;
     if (capacity > 0 && size <= capacity) {
       tmp_data = static_cast<T*>(operator new(capacity * sizeof(T)));
@@ -160,31 +166,32 @@ private:
           new (tmp_data + tmp_size) T(data[tmp_size]);
         }
       } catch (...) {
-        while (tmp_size-- > 0) {
-          (tmp_data + tmp_size)->~T();
-        }
-        operator delete(tmp_data);
+        delete_array(tmp_data, tmp_size);
         throw;
       }
     }
     return tmp_data;
   }
 
-  void reset(T* tmp_data, size_t tmp_size, size_t new_capacity) {   // O(N)
-    for (size_t i = 0; i < size_; i++) {
-      data_[i].~T();
+  void delete_array(T* data, size_t tmp_size) {
+    for (size_t i = 0; i < tmp_size; i++) {
+      (data + i)->~T();
     }
-    operator delete(data_);
+    operator delete(data);
+  }
+
+  void reset(T* tmp_data, size_t tmp_size, size_t new_capacity) {   // O(N) nothrow
+    delete_array(data_, size_);
     size_ = tmp_size;
     capacity_ = new_capacity;
     data_ = tmp_data;
   }
 
-  void update(T* data, size_t size, size_t capacity) {              // O(N)
+  void update(T* data, size_t size, size_t capacity) {              // O(N) strong
     reset(copy(data, size, capacity), size, capacity);
   }
 
-  void set_capacity(size_t new_capacity) {                          // O(N)
+  void set_capacity(size_t new_capacity) {                          // O(N) strong
     if (new_capacity != capacity_) {
       update(data_, size_, new_capacity);
     }
